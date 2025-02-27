@@ -72,3 +72,7 @@ Plugins/**/Intermediate/*
 
 # Cache files for the editor to use
 DerivedDataCache/*
+/AI_Learning/AI/Binaries
+AI_Learning/AI/.vsconfig
+/AI_Learning/AI/Intermediate
+/AI_Learning/AI/Saved
