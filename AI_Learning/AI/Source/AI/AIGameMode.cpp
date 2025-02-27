@@ -36,6 +36,6 @@ void AAIGameMode::StartPlay()
 
 	if (ensure(EnemyManager))
 	{
-		EnemyManager->Initialize();
+		EnemyManager->StartSystem();
 	}
 }

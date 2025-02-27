@@ -21,7 +21,7 @@ void UEnemyAISubsystem::Initialize()
 				FSpawnDataRuntime runtimeData;
 				runtimeData.ClassToSpawn = AITypeToSpawnSettings.Key;
 				runtimeData.SpawnSettings = &AITypeToSpawnSettings.Value;
-				SpawnData.Add(runtimeData);
+				RuntimeSpawnData.Add(runtimeData);
 			}
 		}
 	}
@@ -30,7 +30,7 @@ void UEnemyAISubsystem::Initialize()
 void UEnemyAISubsystem::StartSystem()
 {
 	const float CurrentTime = UGameplayStatics::GetTimeSeconds(GetWorld());
-	for (FSpawnDataRuntime& runtimeData : SpawnData)
+	for (FSpawnDataRuntime& runtimeData : RuntimeSpawnData)
 	{
 		runtimeData.bIsActive = true;
 		if (runtimeData.SpawnSettings->bBeginSpawnOnStart)
@@ -45,9 +45,9 @@ void UEnemyAISubsystem::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	const float CurrentTime = UGameplayStatics::GetTimeSeconds(GetWorld());
-	for (FSpawnDataRuntime& runtimeData : SpawnData)
+	for (FSpawnDataRuntime& runtimeData : RuntimeSpawnData)
 	{
-		if (runtimeData.bIsActive)
+		if (runtimeData.bIsActive && (uint32)runtimeData.SpawnedActors.Num() < runtimeData.SpawnSettings->TargetCount)
 		{
 			const float interval = CurrentTime - runtimeData.SpawnTimestamp;
 			if (interval > runtimeData.SpawnSettings->SpawnInterval)
@@ -65,21 +65,45 @@ void UEnemyAISubsystem::SpawnIntervalSatisfied(FSpawnDataRuntime& ForSpawnData, 
 	FActorSpawnParameters spawnParams;
 	spawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 
-	for (AAISpawnVolume* spawnVolume : AvailableSpawns)
+	TArray<AAISpawnVolume*> availableSpawns = AvailableSpawns.Array();
+	int32 numAvailable = availableSpawns.Num();
+	int32 randIndex = FMath::RandHelper(numAvailable);
+
+	while (numAvailable > 0)
 	{
+		AAISpawnVolume* spawnVolume = availableSpawns[randIndex];
 		if (spawnVolume && spawnVolume->CanUseToSpawn(*ForSpawnData.ClassToSpawn))
 		{
 			spawnedActor = GetWorld()->SpawnActor<AEnemyAICharacter>(ForSpawnData.ClassToSpawn, spawnVolume->GetActorLocation(), spawnVolume->GetActorRotation(), spawnParams);
 			break;
 		}
+
+		--numAvailable;
+		randIndex = (randIndex + 1) % numAvailable;
 	}
 
 	if (spawnedActor)
 	{
 		ForSpawnData.SpawnTimestamp = InTimestamp;
+		ForSpawnData.SpawnedActors.Add(spawnedActor);
+		spawnedActor->OnDestroyed.AddDynamic(this, &UEnemyAISubsystem::OnActorDestroyed);
 	}
 }
 
+//////////////////////////////////////////////////////////////////////////
+
+void UEnemyAISubsystem::OnActorDestroyed(AActor* DestroyedActor)
+{
+	for (FSpawnDataRuntime& runtimeData : RuntimeSpawnData)
+	{
+		if (runtimeData.SpawnedActors.Contains(DestroyedActor))
+		{
+			DestroyedActor->OnDestroyed.RemoveDynamic(this, &UEnemyAISubsystem::OnActorDestroyed);
+			runtimeData.SpawnedActors.Remove(DestroyedActor);
+			break;
+		}
+	}
+}
 
 void UEnemyAISubsystem::RegisterSpawnVolume(AAISpawnVolume* NewSpawnVolume)
 {

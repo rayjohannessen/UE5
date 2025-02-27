@@ -18,6 +18,7 @@ public:
 
 	virtual void StartPlay() override;
 
+	UPROPERTY(BlueprintReadOnly)
 	TObjectPtr<class UEnemyAISubsystem> EnemyManager = nullptr;
 };
 

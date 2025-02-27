@@ -13,10 +13,11 @@ struct FAISpawnSettings;
 struct FSpawnDataRuntime
 {
 	bool	bIsActive = false;
-	int32	CurrentCount = 0;
 	float	SpawnTimestamp = 0.f;
 	TSubclassOf<AAICharacter> ClassToSpawn = nullptr;
 	const FAISpawnSettings* SpawnSettings = nullptr;
+
+	TSet<AActor*> SpawnedActors;
 };
 
 /**
@@ -41,9 +42,12 @@ protected:
 	UPROPERTY()
 	TSet<AAISpawnVolume*> AvailableSpawns;
 
-	TArray<FSpawnDataRuntime> SpawnData;
+	TArray<FSpawnDataRuntime> RuntimeSpawnData;
 
 	void SpawnIntervalSatisfied(FSpawnDataRuntime& ForSpawnData, const float InTimestamp);
+
+	UFUNCTION()
+	void OnActorDestroyed(AActor* DestroyedActor);
 
 public:
 	void RegisterSpawnVolume(AAISpawnVolume* NewSpawnVolume);
