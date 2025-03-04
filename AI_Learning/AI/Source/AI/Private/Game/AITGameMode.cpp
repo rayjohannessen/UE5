@@ -2,6 +2,7 @@
 
 #include "Game/AITGameMode.h"
 #include "AI/AITEnemyAISubsystem.h"
+#include "Player/AITPlayerController.h"
 
 #include "UObject/ConstructorHelpers.h"
 
@@ -13,6 +14,7 @@ AAITGameMode::AAITGameMode()
 	{
 		DefaultPawnClass = PlayerPawnBPClass.Class;
 	}
+	PlayerControllerClass = AAITPlayerController::StaticClass();
 }
 
 void AAITGameMode::InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage)

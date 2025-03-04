@@ -7,7 +7,6 @@
 #include "AITEnemyAICharacter.generated.h"
 
 class UBehaviorTree;
-class UAIPerceptionComponent;
 
 /**
  * 
@@ -23,8 +22,4 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = AI)
 	TObjectPtr<UBehaviorTree> BehaviorTree = nullptr;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = AI)
-	TObjectPtr<UAIPerceptionComponent> PerceptionComp;
-
 };
